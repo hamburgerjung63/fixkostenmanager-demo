@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#172b27"><title>Fixkostenmanager DEMO 2.7</title>
+<style>
+:root{--bg:#f3f5f2;--card:#fff;--ink:#1d2925;--muted:#68756f;--green:#1f6a50;--line:#e2e8e3;--red:#b64242;--gold:#a66b16}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{background:#172b27;color:white;padding:24px 18px 22px;border-radius:0 0 22px 22px}
+header small{opacity:.75;letter-spacing:.08em;text-transform:uppercase}h1{font-size:26px;margin:7px 0 3px}header p{margin:0;color:#cbd8d2;font-size:14px}
+main{max-width:900px;margin:auto;padding:16px 14px 44px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:15px;margin-bottom:12px;box-shadow:0 2px 9px #172b2708}
+.metric span{display:block;color:var(--muted);font-size:12px}.metric strong{display:block;font-size:24px;margin-top:7px;letter-spacing:-.5px}.metric small{color:var(--muted);font-size:11px}.metric strong.coverage-value{color:var(--green)}
+h2{font-size:17px;margin:4px 0 13px}.tabs{display:flex;gap:7px;overflow:auto;margin:12px 0}.tab{border:1px solid var(--line);background:white;padding:10px 13px;border-radius:30px;white-space:nowrap;color:var(--ink)}.tab.active{background:var(--green);color:white;border-color:var(--green)}.tab{height:52px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:8px 13px 6px;line-height:18px;flex-shrink:0}.tab span{display:block;line-height:18px}.tab small{display:block;font-size:9px;line-height:12px;opacity:.75;font-weight:400}.tab-caption{position:relative}
+label{display:block;font-size:12px;color:var(--muted);margin:10px 0 5px}input,select{width:100%;padding:12px;border:1px solid #d6dfd8;border-radius:10px;background:#fff;color:var(--ink);font:inherit;min-height:44px}
+button{border:0;border-radius:11px;background:var(--green);color:white;padding:12px 15px;font:600 14px inherit;min-height:44px}button.secondary{background:#edf2ee;color:var(--green);border:1px solid #dce6df}button.danger{background:#fff0f0;color:var(--red);border:1px solid #f0d4d4}
+.row{display:flex;gap:9px;align-items:center}.row>*{flex:1}.muted{color:var(--muted);font-size:13px}.listitem{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}.listitem:last-child{border:0}.listitem b{display:block;font-size:14px}.listitem small{color:var(--muted)}.amount{text-align:right;white-space:nowrap;font-weight:650}.pill{font-size:11px;background:#edf3ef;color:var(--green);padding:4px 7px;border-radius:20px}
+.hidden{display:none!important}.monthgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.month{display:flex;gap:6px;align-items:center;font-size:13px}.month input{width:auto;min-height:0}.checkline{display:flex;align-items:center;gap:9px;font-size:14px;color:var(--ink)}.checkline input{width:auto;min-height:0}.pill.ended{background:#eceff0;color:#59666c}.pill.paused{background:#fff4e5;color:#986419}.categoryline{display:flex;align-items:center;gap:7px;padding:9px 0;border-bottom:1px solid var(--line)}.categoryline span{flex:1;overflow-wrap:anywhere}.categoryline button{flex:0 0 auto;padding:8px;min-height:38px}.row>button{flex:0 1 auto}button{cursor:pointer}
+.notice{padding:11px 12px;border-radius:10px;background:#edf4ef;color:#315b45;font-size:13px;margin:10px 0}.warning{background:#fff2e8;color:#8c5417}.empty{text-align:center;color:var(--muted);padding:20px 8px;font-size:14px}
+/* Zahlungsplan: gleich große Zahlen, feste Betragsspalten, farbiger Saldo */
+.schedule-head,.schedule-line{display:grid;grid-template-columns:minmax(0,1fr) minmax(100px,auto) minmax(108px,auto);gap:10px;align-items:center}
+.schedule-head{font-size:13px;font-weight:700;color:var(--muted);padding:10px 0;border-bottom:2px solid var(--line)}
+.schedule-head>div:nth-child(n+2){text-align:right}
+.schedule-line{padding:11px 0;border-bottom:1px solid var(--line);font-size:14px}
+.schedule-line .schedule-description{min-width:0;overflow-wrap:anywhere}
+.schedule-line .schedule-description b{font-size:14px;display:block}
+.schedule-line .schedule-description small{display:block;color:var(--muted);font-size:12px;margin-top:3px}
+.schedule-line .schedule-number{font-size:14px;font-weight:650;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.schedule-line .schedule-balance.positive{color:#175b40}
+.schedule-line .schedule-balance.negative{color:#b12e36}
+.schedule-line.month-close{background:#eaf1ec;margin:4px -8px 9px;padding:12px 8px;border-radius:9px;border-bottom:0}
+.schedule-line.month-close .schedule-description b{color:#183e30}
+@media(max-width:460px){.schedule-head,.schedule-line{grid-template-columns:minmax(0,1fr) minmax(79px,auto) minmax(88px,auto);gap:5px}.schedule-line .schedule-number,.schedule-line .schedule-description b{font-size:12px}.schedule-head{font-size:11px}}
+.tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch}.monthtable{width:100%;border-collapse:collapse;font-size:12px;white-space:nowrap}.monthtable th,.monthtable td{padding:10px 7px;border-bottom:1px solid var(--line);text-align:right}.monthtable th:first-child,.monthtable td:first-child{text-align:left}.monthtable th{color:var(--muted);font-weight:600}.negative{color:var(--red);font-weight:700}.low{color:var(--gold);font-weight:700}.positive{color:var(--green);font-weight:700}.category-group{border:1px solid var(--line);border-radius:12px;margin:12px 0;overflow:hidden}.category-header{background:#edf3ef;padding:12px;display:flex;justify-content:space-between;gap:10px;align-items:center}.category-header b{font-size:15px}.category-header .category-total{color:#175b40;font-weight:700;white-space:nowrap}.category-detail{padding:0 12px}.category-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:11px 0;border-bottom:1px solid var(--line);font-size:14px}.category-item:last-child{border-bottom:0}.category-item small{display:block;color:var(--muted);font-size:12px;margin-top:3px}.category-item .category-amount{text-align:right;white-space:nowrap;font-weight:650}.category-item .category-amount small{font-weight:400}.category-foot{padding:10px 12px;background:#fafcfb;color:var(--muted);font-size:12px}/* Kategorieanteile: SVG-Tortendiagramm ohne externe Bibliotheken */
+.category-chart{margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}
+.category-pie-wrap{display:flex;align-items:center;justify-content:center;gap:22px;flex-wrap:wrap}
+.category-pie-wrap svg{width:min(100%,280px);height:auto;flex:0 1 280px}
+.category-legend{list-style:none;padding:0;margin:0;flex:1 1 210px;min-width:0}
+.category-legend li{display:flex;align-items:baseline;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}
+.category-legend .swatch{width:11px;height:11px;border-radius:3px;flex:0 0 11px}
+.category-legend .legend-name{flex:1;overflow-wrap:anywhere}
+.category-legend strong{white-space:nowrap;font-variant-numeric:tabular-nums}
+/* Zusammenfassung der Kontodeckung: volle Breite, auch auf dem iPhone lesbar */
+.transfer-card{grid-column:auto}
+.transfer-breakdown{margin-top:10px}
+.transfer-breakdown .transfer-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--line);font-size:14px}
+.transfer-breakdown .transfer-item span{color:var(--ink);font-size:14px;overflow-wrap:anywhere}
+.transfer-breakdown .transfer-item b{font-size:15px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.transfer-breakdown .transfer-item.total{border-top:2px solid var(--line);border-bottom:0;padding-top:12px}
+.transfer-breakdown .transfer-item.total span{font-weight:700;color:var(--green)}
+.transfer-breakdown .transfer-item.total b{font-size:21px;color:var(--green)}
+.transfer-breakdown .transfer-note{font-size:12px;color:var(--muted);margin-top:7px}
+.extra-transfer-entry .remove-extra-row{display:flex;justify-content:flex-end;margin-top:10px}
+.extra-transfer-entry .remove-extra-row button{min-height:42px}
+footer{text-align:center;color:var(--muted);font-size:11px;padding:15px}
+@media(min-width:650px){main{padding:22px}.grid{grid-template-columns:repeat(4,minmax(0,1fr))}.cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}}
+</style></head>
+<body>
+<header><small>Vorführversion · ausschließlich erfundene Zahlen</small><h1>Fixkostenmanager <span style="color:#b6e7cd">DEMO</span></h1><p>Zum Ausprobieren – unabhängig von deinen privaten Finanzdaten.</p></header>
+<main>
+<div class="tabs">
+<button class="tab active" data-tab="home"><span>Übersicht</span></button><button class="tab" data-tab="calendar"><span>Zahlungsplan</span></button><button class="tab tab-caption" data-tab="categories"><span>Kategorien</span><small>Aufstellung</small></button><button class="tab tab-caption" data-tab="costs"><span>Fixkosten</span><small>Eingabe</small></button><button class="tab" data-tab="settings"><span>Einstellungen</span></button>
+</div>
+<section id="home">
+<div class="grid">
+<div class="card metric"><span>Jährliche Fixkosten</span><strong id="mAnnual">0,00 €</strong><small>Geplante Kosten für 12 Monate</small></div>
+<div class="card metric"><span>Monatliche Fixkosten</span><strong id="mAverage">0,00 €</strong><small>Jahreskosten ÷ 12</small></div>
+<div class="card metric"><span>Deckungsbeitrag</span><strong class="coverage-value" id="mCoverageTotal">0,00 €</strong><small id="mCoverageInfo">Eigenanteil auf volle 25,00 € gerundet, Betrag inkl. aller externen Überweisungen.</small></div>
+<div class="card metric yesterday-card"><span>Aktueller Kontostand Vortag</span><strong id="mYesterday">–</strong><small id="yesterdayInfo">Berechneter Stand von gestern</small></div>
+</div>
+<div class="cols">
+<div class="card"><h2>Als Nächstes fällig</h2><div id="upcoming"></div></div>
+<div class="card"><h2>12-Monats-Übersicht</h2><p class="muted">Ab dem gewählten Kontostandsdatum: Jeder Monat übernimmt den Endstand des Vormonats. Im ersten Monat werden nur Buchungen ab dem Startdatum berücksichtigt.</p><div id="monthStatus" class="notice"></div><div class="tablewrap"><table class="monthtable"><thead><tr><th>Monat</th><th>Start</th><th>Überweisung</th><th>Abbuchungen</th><th>Endstand</th></tr></thead><tbody id="monthly"></tbody></table></div><p class="muted">Rot = negativer Monatsendstand; Grün = nichtnegativer Monatsendstand. Die Überweisung wird am eingestellten Tag gebucht, Abbuchungen am selben Tag zuerst. Auch zwischen den Monatsenden kann der Kontostand niedriger sein.</p></div>
+</div>
+<div class="card" id="liquiditySummary"><h2>Zusätzliche Liquiditätsprognose</h2><div class="grid"><div class="metric"><span>Überschuss / Fehlbetrag zur Mindestdeckung</span><strong id="surplus">–</strong></div><div class="metric"><span>Niedrigster Stand (12 Monate)</span><strong id="lowestBalance">–</strong></div><div class="metric"><span>Zusätzlicher Startbedarf</span><strong id="startShortfall">–</strong></div></div><p class="muted" id="forecastNote"></p><div class="notice" id="liquidityWarning"></div></div>
+</section>
+<section id="costs" class="hidden">
+<div class="card">
+<h2 id="formTitle">Neue Fixkosten hinzufügen</h2><input id="editId" type="hidden">
+<label for="name">Bezeichnung</label><input id="name" placeholder="z. B. Strom, Miete, Kfz-Versicherung">
+<div class="row"><div><label for="amount">Betrag (€)</label><input id="amount" type="number" min=".01" step=".01" placeholder="0,00"></div><div><label for="category">Kategorie</label><select id="category"><option>Wohnen</option><option>Energie</option><option>Versicherung</option><option>Kommunikation</option><option>Gebühren</option><option>Mobilität</option><option>Abonnements</option><option>Sonstiges</option></select></div></div>
+<label for="frequency">Zahlungsrhythmus</label><select id="frequency" onchange="frequencyChanged()"><option value="monthly">Monatlich</option><option value="quarterly">Vierteljährlich</option><option value="yearly">Jährlich</option><option value="months">Bestimmte Monate (z. B. GEZ)</option></select>
+<div id="dayField"><label for="day">Abbuchungstag im Monat</label><input id="day" type="number" min="1" max="31" value="1"><label class="checkline"><input id="lastDay" type="checkbox" onchange="toggleLastDay()"> Immer am letzten Kalendertag</label><p class="muted">Fehlt der 29., 30. oder 31., wird automatisch der letzte Kalendertag verwendet.</p></div>
+<div id="monthField" class="hidden"><label for="month">Fälligkeitsmonat</label><select id="month"><option value="1">Januar</option><option value="2">Februar</option><option value="3">März</option><option value="4">April</option><option value="5">Mai</option><option value="6">Juni</option><option value="7">Juli</option><option value="8">August</option><option value="9">September</option><option value="10">Oktober</option><option value="11">November</option><option value="12">Dezember</option></select></div>
+<div id="monthsField" class="hidden"><label>Fälligkeitsmonate auswählen</label><div class="monthgrid" id="monthChecks"></div></div>
+<div class="row"><div><label for="firstDate">Erste geplante Abbuchung / Beginn</label><input id="firstDate" type="date"></div><div><label for="endDate">Letzte erlaubte Abbuchung (optional)</label><input id="endDate" type="date"></div></div><div class="row"><div><label for="active">Status</label><select id="active"><option value="yes">Aktiv</option><option value="no">Pausiert</option></select></div></div>
+<p class="muted">Das Enddatum ist einschließlich: Eine Abbuchung am Enddatum wird noch berücksichtigt. Danach wird der Eintrag als „Beendet“ geführt. Bei bestehenden Einträgen bleibt der bisherige erste Termin erhalten.</p>
+<div class="row"><button onclick="saveCost()">Speichern</button><button class="secondary" onclick="resetForm()">Abbrechen</button></div>
+</div>
+<div class="card"><div class="row"><h2 style="margin:0">Deine Fixkosten</h2><span class="muted" id="costCount" style="text-align:right"></span></div><label for="costFilter">Einträge anzeigen</label><select id="costFilter" onchange="render()"><option value="all">Alle Ausgaben</option><option value="active">Aktive Ausgaben</option><option value="ended">Beendete Ausgaben</option><option value="paused">Pausierte Ausgaben</option></select><div id="costList"></div></div>
+</section>
+<section id="calendar" class="hidden">
+<div class="card transfer-card"><h2>Berechnung für die monatliche Kontodeckung</h2><div class="transfer-breakdown" id="transferBreakdown"></div></div>
+<div class="card"><h2>Alle geplanten Abbuchungen</h2><p class="muted">Vorschau über zwölf Kalendermonate ab dem eingestellten Kontostandsdatum. Am Ende jedes Monats steht der Endsaldo, der zugleich der Anfangsbestand des nächsten Monats ist. Abbuchungen am Überweisungstag werden vorsichtshalber vor der Überweisung angezeigt.</p><div id="schedule"></div></div>
+</section>
+<section id="categories" class="hidden">
+<div class="card"><h2>Kosten nach Kategorien</h2><p class="muted">Auswertung derselben kommenden zwölf Monate wie bei „Jährliche Fixkosten“ auf der Startseite. Berücksichtigt werden geplante Abbuchungen aktiver Einträge einschließlich Beginn und Enddatum. Pausierte Einträge ohne Abbuchung werden nicht mitgerechnet.</p><div class="grid"><div class="metric"><span>Gesamtkosten (12 Monate)</span><strong id="categoryTotal">0,00 €</strong></div><div class="metric"><span>Durchschnitt pro Monat</span><strong id="categoryAverage">0,00 €</strong></div></div><div id="categorySummary" class="category-summary"></div><div class="category-chart"><h2>Verteilung der Fixkosten nach Kategorien</h2><div id="categoryPie" class="category-pie-wrap"></div></div></div>
+</section>
+<section id="settings" class="hidden"><div class="card">
+<h2>Einmaliger Startwert und Überweisung</h2><p class="muted">Das Startguthaben legst du bei der Einrichtung fest. Danach wird der Kontostand aus den geplanten Buchungen fortgeschrieben. Bei einem neuen Startwert ändert sich die Prognose.</p>
+<div class="row"><div><label for="balance">Startguthaben (€)</label><input id="balance" type="number" min="0" step=".01" placeholder="z. B. 1250,00"></div><div><label for="asof">Startdatum</label><input id="asof" type="date"></div></div>
+<div class="row"><div><label for="transferDay">Monatlicher Überweisungstag</label><input id="transferDay" type="number" min="1" max="31" step="1" value="9"><p class="muted">Beispiel: 8 für den 8. des Monats. Bei Monatsende wird ein nicht vorhandener Tag auf den letzten Kalendertag angepasst.</p></div><div><label for="roundingStep">Überweisung aufrunden auf volle</label><select id="roundingStep"><option value="5">5 €</option><option value="10">10 €</option><option value="25">25 €</option><option value="50">50 €</option></select></div></div>
+<div class="notice" id="coverage">Die Überweisung wird aus den monatlichen Fixkosten aufgerundet.</div>
+<button onclick="saveSettings()">Kontodaten speichern</button>
+</div>
+<div class="card"><h2>Weitere monatliche Überweisungen</h2><p class="muted">Bis zu drei regelmäßige Geldeingänge von Dritten. Sie werden im Zahlungsplan und in den Kontoständen berücksichtigt und von deinem monatlichen Fixkosten-Durchschnitt abgezogen, bevor deine eigene Überweisung aufgerundet wird.</p><div id="extraTransfers"></div><button class="secondary" onclick="addExtraTransfer()" id="addExtraTransferBtn">+ Überweisung hinzufügen</button><p class="muted">Bei einem Überweisungstag am 29., 30. oder 31. wird in kürzeren Monaten der letzte Kalendertag verwendet. Ein Eingang am Startdatum gilt bereits als im Startguthaben enthalten.</p><button onclick="saveExtraTransfers()">Zusätzliche Überweisungen speichern</button></div>
+<div class="card"><h2>Kategorien verwalten</h2><p class="muted">Eigene Kategorien hinzufügen oder umbenennen. Beim Löschen einer verwendeten Kategorie wählst du zuerst eine Ersatzkategorie.</p><div class="row"><input id="newCategory" placeholder="Neue Kategorie, z. B. Gesundheit" aria-label="Neue Kategorie"><button onclick="addCategory()">Hinzufügen</button></div><div id="categoryList"></div></div>
+<div class="card"><h2>Numbers-Abgleich (manuell)</h2><p class="muted">Exportiere die Fixkosten als CSV und öffne sie in Numbers. Nach Änderungen exportiere die Tabelle aus Numbers als CSV und importiere sie hier wieder. Es erfolgt keine automatische Synchronisierung.</p><div class="row"><button onclick="exportCSV()">CSV für Numbers</button><button class="secondary" onclick="document.getElementById('csvFile').click()">CSV aus Numbers importieren</button></div><input id="csvFile" class="hidden" type="file" accept=".csv,text/csv" onchange="importCSV(event)"><div class="notice warning">Vor dem Import bitte eine JSON-Sicherung erstellen. Der CSV-Import ersetzt die Fixkostenliste, nicht die Kontoeinstellungen.</div></div><div class="card"><h2>Daten sichern und übertragen</h2><p class="muted">Diese Demo speichert ihre eigenen Daten lokal. Bitte keine private JSON-Sicherung importieren, wenn du die Demo anderen zeigen möchtest.</p><div class="row"><button onclick="exportData()">Daten exportieren</button><button class="secondary" onclick="document.getElementById('importFile').click()">Sicherung importieren</button></div><input id="importFile" type="file" accept="application/json" class="hidden" onchange="importData(event)"><p class="muted">Beim Import werden die vorhandenen App-Daten ersetzt.</p></div>
+<div class="card"><h2>Hinweise zur Berechnung</h2><p class="muted">Die jährlichen Fixkosten ergeben sich aus den geplanten Abbuchungen in den zwölf Monaten ab dem Startdatum. Die monatlichen Fixkosten sind der Durchschnitt (Jahreskosten ÷ 12). Der eigene Überweisungsbetrag wird auf volle 5, 10, 25 oder 50 Euro aufgerundet und jeweils am eingestellten Überweisungstag eingeplant. Bis zu drei weitere monatliche Überweisungen werden als eigene Geldeingänge berücksichtigt. Ihre monatliche Gesamtsumme wird vom monatlichen Fixkosten-Durchschnitt abgezogen, bevor der eigene Überweisungsbetrag aufgerundet wird. Der eigene Überweisungsbetrag kann dabei nicht negativ werden. Der einmal eingegebene Startbetrag wird über die geplanten Buchungen fortgeschrieben. Der Vortages-Endstand wird aus dem Startguthaben und allen geplanten Buchungen bis einschließlich gestern berechnet. Liegt gestern auf dem Startdatum, kann der Wert mit dem Startguthaben übereinstimmen. Der Wert ist keine Bankabfrage. Die Monatsübersicht zeigt zwölf Kalender-Monatsenden ab dem gewählten Startmonat; im ersten Monat nur Termine ab dem Startdatum. Bei gleicher Tagesfälligkeit rechnen wir vorsichtshalber Abbuchungen vor der Überweisung. Die zusätzliche Liquiditätsprognose kann kurzfristige Unterdeckungen anzeigen und verwendet weiterhin eine interne Mindestreserve von 100 Euro; sie beeinflusst den Überweisungsbetrag nicht.</p><p class="muted">Bankarbeitstage, Feiertage, variable Beträge und tatsächliche Buchungsverschiebungen werden nicht automatisch von der Bank abgefragt. Bitte gleiche die Termine mit deinen Vertragsunterlagen ab.</p><button class="danger" onclick="clearAll()">Alle Daten löschen</button></div>
+</section>
+<footer>Fixkostenmanager DEMO 2.7 · ausschließlich Beispieldaten · separat gespeichert</footer>
+</main>
+<script>
+const $=id=>document.getElementById(id), money=n=>new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(Number(n)||0),pad=n=>String(n).padStart(2,'0'),dateStr=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()),fmt=d=>d instanceof Date&&!isNaN(d)?new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'long',year:'numeric'}).format(d):'–',months=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+const defaults=['Wohnen','Energie','Versicherung','Kommunikation','Gebühren','Mobilität','Abonnements','Sonstiges'];
+let data;try{data=JSON.parse(localStorage.getItem('fixkosten_demo_data')||'null')}catch(e){};
+if(!data||!Array.isArray(data.costs)){
+const today=new Date(), year=today.getFullYear()-1;
+const example=(id,name,amount,category,frequency,day,month=1)=>({id:'demo-'+id,name,amount,category,frequency,day,firstDate:dateStr(new Date(year,month-1,Math.min(day,28))),endDate:'',lastDay:false,active:'yes',months:[]});
+data={costs:[
+example(1,'Wohnungsmiete',790,'Wohnen','monthly',3),
+example(2,'Stromabschlag',78,'Energie','monthly',6),
+example(3,'Internet und Telefon',42,'Kommunikation','monthly',12),
+example(4,'Mobilfunk',19.99,'Kommunikation','monthly',17),
+example(5,'Haftpflichtversicherung',84,'Versicherung','yearly',15,5),
+example(6,'Hausratversicherung',120,'Versicherung','yearly',10,9),
+example(7,'Kfz-Versicherung',210,'Mobilität','quarterly',5,1),
+example(8,'Streaming-Abonnement',15.99,'Abonnements','monthly',21),
+example(9,'Fitnessstudio',34.90,'Abonnements','monthly',25),
+example(10,'Rundfunkbeitrag',55.08,'Gebühren','quarterly',15,2)
+],balance:1800,asof:dateStr(new Date(today.getFullYear(),today.getMonth(),1)),transferDay:9,buffer:100,roundingStep:10,
+extraTransfers:[{id:'demo-e1',name:'Haushaltsbeitrag Alex',amount:250,day:5},{id:'demo-e2',name:'Kostenbeteiligung Sam',amount:100,day:15}],
+categories:[...defaults]};
+}
+function normalize(){if(!Number.isInteger(Number(data.transferDay))||Number(data.transferDay)<1||Number(data.transferDay)>31)data.transferDay=9;else data.transferDay=Number(data.transferDay);if(![5,10,25,50].includes(Number(data.roundingStep)))data.roundingStep=25;if(!Array.isArray(data.categories))data.categories=[...defaults];data.categories=[...new Set([...data.categories,...data.costs.map(c=>c.category).filter(Boolean)])];data.costs.forEach(c=>{if(!c.id)c.id=String(Math.random());if(!c.active)c.active='yes';if(!Array.isArray(c.months))c.months=[];if(!c.firstDate)c.firstDate=dateStr(new Date());if(!c.day)c.day=Number(c.firstDate.slice(-2))||1;if(c.lastDay===undefined)c.lastDay=false;if(!c.endDate)c.endDate='';});if(!Number.isFinite(Number(data.buffer)))data.buffer=100;if(!Array.isArray(data.extraTransfers))data.extraTransfers=[];data.extraTransfers=data.extraTransfers.slice(0,3).filter(t=>t&&typeof t==='object').map(t=>({id:String(t.id||Math.random()),name:String(t.name||''),amount:Number(t.amount)||0,day:Number(t.day)||1}));}
+normalize();
+function persist(){try{localStorage.setItem('fixkosten_demo_data',JSON.stringify(data))}catch(e){alert('Speichern fehlgeschlagen: Bitte freien Speicher prüfen und eine Sicherung erstellen.');return}render()}
+function parseDate(s){if(!/^\d{4}-\d{2}-\d{2}$/.test(s||''))return new Date(NaN);const [y,m,d]=s.split('-').map(Number);let x=new Date(y,m-1,d);return x.getFullYear()===y&&x.getMonth()===m-1&&x.getDate()===d?x:new Date(NaN)}
+function clampDate(y,m,d){return new Date(y,m,Math.min(d,new Date(y,m+1,0).getDate()))}
+function scheduledDay(c,y,m){return c.lastDay?new Date(y,m+1,0).getDate():Math.min(Number(c.day)||1,new Date(y,m+1,0).getDate())}
+function occurrences(c,start,end){const first=parseDate(c.firstDate),last=c.endDate?parseDate(c.endDate):null,out=[];if(isNaN(first)||last&&isNaN(last))return out;const push=d=>{if(d>=first&&(!last||d<=last)&&d>=start&&d<end)out.push({date:d,cost:c})};if(c.frequency==='monthly'||c.frequency==='quarterly'){const step=c.frequency==='monthly'?1:3;for(let k=0;k<360;k++){let idx=first.getMonth()+k*step,y=first.getFullYear()+Math.floor(idx/12),m=((idx%12)+12)%12;let d=k===0?first:clampDate(y,m,scheduledDay(c,y,m));if(d>=end)break;push(d)}}else if(c.frequency==='yearly'){for(let k=0;k<35;k++){let y=first.getFullYear()+k,d=k===0?first:clampDate(y,first.getMonth(),scheduledDay(c,y,first.getMonth()));if(d>=end)break;push(d)}}else if(c.frequency==='months'){let selected=[...new Set(c.months.map(Number))].filter(m=>m>=1&&m<=12);for(let y=first.getFullYear();y<=end.getFullYear();y++)for(let m of selected){let d=clampDate(y,m-1,scheduledDay(c,y,m-1));push(d)}}return out.sort((a,b)=>a.date-b.date)}
+function allEvents(start,end){return data.costs.filter(c=>c.active!=='no').flatMap(c=>occurrences(c,start,end)).sort((a,b)=>a.date-b.date)}
+function isEnded(c,now){let last=c.endDate?parseDate(c.endDate):null;return !!last&&!isNaN(last)&&last<now}
+function forecast(start,end,transfer){let ev=allEvents(start,end).map(e=>({date:e.date,delta:-Number(e.cost.amount),kind:'debit',cost:e.cost,order:0}));for(let y=start.getFullYear();y<=end.getFullYear();y++)for(let m=0;m<12;m++){let d=clampDate(y,m,Number(data.transferDay));if(d>start&&d<end)ev.push({date:d,delta:transfer,kind:'transfer',order:1})}for(const t of data.extraTransfers){if(!t.name||!Number.isFinite(t.amount)||t.amount<=0||!Number.isInteger(t.day)||t.day<1||t.day>31)continue;for(let y=start.getFullYear();y<=end.getFullYear();y++)for(let m=0;m<12;m++){const d=clampDate(y,m,t.day);if(d>start&&d<end)ev.push({date:d,delta:t.amount,kind:'extraTransfer',transferName:t.name,order:2})}}ev.sort((a,b)=>a.date-b.date||a.order-b.order);let cumulative=0,min=0;for(let e of ev){cumulative+=e.delta;min=Math.min(min,cumulative);e.cumulative=cumulative}return {events:ev,required:Math.max(0,-min+Number(data.buffer||0))}}
+function render(){normalize();const today=new Date();today.setHours(0,0,0,0);const base=data.asof?parseDate(data.asof):today;if(isNaN(base))return;const end=new Date(base.getFullYear()+1,base.getMonth(),base.getDate()),annual=allEvents(base,end).reduce((s,e)=>s+Number(e.cost.amount),0),average=annual/12,extraMonthly=data.extraTransfers.filter(t=>t.name&&Number.isFinite(t.amount)&&t.amount>0&&Number.isInteger(t.day)&&t.day>=1&&t.day<=31).reduce((sum,t)=>sum+Math.round(t.amount*100),0)/100,ownShare=Math.max(0,average-extraMonthly),transfer=Math.ceil((ownShare-0.00000001)/Number(data.roundingStep))*Number(data.roundingStep),bal=Number(data.balance)||0,result=forecast(base,end,transfer),required=result.required;
+ const lowest=bal+Math.min(0,...result.events.map(e=>e.cumulative)),surplus=bal-required;
+ $('mAnnual').textContent=money(annual);$('mAverage').textContent=money(average);const validExtras=data.extraTransfers.filter(t=>t.name&&Number.isFinite(t.amount)&&t.amount>0&&Number.isInteger(t.day)&&t.day>=1&&t.day<=31);
+ $('mCoverageTotal').textContent=money(transfer+extraMonthly);$('mCoverageInfo').textContent='Eigenanteil auf volle '+money(data.roundingStep)+' gerundet, Betrag inkl. aller externen Überweisungen.';
+ $('transferBreakdown').innerHTML=`<div class="transfer-item"><span>Meine Überweisung</span><b>${money(transfer)}</b></div>`+
+ validExtras.map(t=>`<div class="transfer-item"><span>${esc(t.name)} (externe Überweisung)</span><b>${money(t.amount)}</b></div>`).join('')+
+ `<div class="transfer-item total"><span>Deckungsbetrag, gerundet</span><b>${money(transfer+extraMonthly)}</b></div><div class="transfer-note">Monatliche Fixkosten: ${money(average)} · eigener Anteil auf volle ${money(data.roundingStep)} aufgerundet. Die Geldeingänge werden im Zahlungsplan zu ihren jeweiligen Terminen berücksichtigt.</div>`;$('surplus').textContent=(surplus>=0?'+':'−')+money(Math.abs(surplus));$('surplus').className=surplus<0?'negative':'positive';$('lowestBalance').textContent=money(lowest);$('lowestBalance').className=lowest<0?'negative':'positive';$('startShortfall').textContent=money(Math.max(0,-surplus));$('startShortfall').className=surplus<0?'negative':'positive';
+ $('balance').value=data.balance??0;$('asof').value=data.asof||dateStr(today);$('transferDay').value=String(data.transferDay);$('roundingStep').value=String(data.roundingStep);renderExtraTransfers();
+ $('forecastNote').textContent='Berechnete Planung ab '+fmt(base)+' mit einer Mindestreserve von '+money(data.buffer||0)+'. Ein Fehlbetrag kann durch eine kurzfristige Unterdeckung zwischen einzelnen Buchungen entstehen, selbst wenn alle Monatsendstände positiv sind. Es erfolgt keine Bankabfrage.';
+ $('coverage').textContent='Monatliche Fixkosten '+money(average)+' − weitere monatliche Überweisungen '+money(extraMonthly)+' = dein Anteil '+money(ownShare)+' · eigene Überweisung '+money(transfer)+' (auf volle '+money(data.roundingStep)+' aufgerundet). Eigener Überweisungstag: '+data.transferDay+'.';$('coverage').className='notice';
+ $('upcoming').innerHTML=result.events.filter(e=>e.kind==='debit').slice(0,6).map(e=>`<div class="listitem"><div><b>${esc(e.cost.name)}</b><small>${fmt(e.date)} · ${esc(e.cost.category)}</small></div><div class="amount">${money(-e.delta)}</div></div>`).join('')||'<div class="empty">Keine Abbuchungen geplant.</div>';
+  // Monatsübersicht: 12 vollständige Kalendermonats-Enden ab dem gewählten Startmonat.
+  // Die übrigen Kennzahlen behalten ausdrücklich die Berechnungslogik der Version 1.4.
+  renderCategorySummary(base,end,annual);
+  const monthEndExclusive=new Date(base.getFullYear(),base.getMonth()+12,1);
+  const monthlyForecast=forecast(base,monthEndExclusive,transfer);
+  let html='',carry=bal,negativeMonths=0,belowBufferMonths=0;
+  for(let i=0;i<12;i++){
+    const d=new Date(base.getFullYear(),base.getMonth()+i,1),next=new Date(d.getFullYear(),d.getMonth()+1,1);
+    const ev=monthlyForecast.events.filter(e=>e.date>=d&&e.date<next);
+    const debit=ev.filter(e=>e.kind==='debit').reduce((sum,e)=>sum-e.delta,0);
+    const credit=ev.filter(e=>e.kind==='transfer'||e.kind==='extraTransfer').reduce((sum,e)=>sum+e.delta,0);
+    const opening=carry;carry=Math.round((carry+credit-debit)*100)/100;
+    const status=carry<0?'negative':'positive';
+    if(carry<0)negativeMonths++;
+    html+=`<tr><td><b>${months[d.getMonth()]} ${d.getFullYear()}</b>${i===0?'<br><small>ab '+fmt(base)+'</small>':''}</td><td>${money(opening)}</td><td>${money(credit)}</td><td>−${money(debit)}</td><td class="${status}">${money(carry)}</td></tr>`;
+  }
+  $('monthly').innerHTML=html;
+  // Monatsendstände und Zwischenbuchungen getrennt prüfen – identische Ereignisse wie im Zahlungsplan.
+  const negativeInterim=monthlyForecast.events.filter(e=>bal+e.cumulative < -0.000001);
+  const negativeClosing=[];
+  for(let i=0;i<12;i++){
+    const next=new Date(base.getFullYear(),base.getMonth()+i+1,1);
+    const close=bal+monthlyForecast.events.filter(e=>e.date<next).reduce((sum,e)=>sum+e.delta,0);
+    if(close < -0.000001) negativeClosing.push(months[(base.getMonth()+i)%12]+' '+(base.getFullYear()+Math.floor((base.getMonth()+i)/12)));
+  }
+  const warn=$('liquidityWarning');
+  if(negativeClosing.length){
+    warn.className='notice warning';
+    warn.textContent='Achtung: Unterdeckung am Monatsende in '+negativeClosing.join(', ')+'. Bitte Zahlungsplan prüfen und Startguthaben oder Überweisung anpassen.';
+  }else if(negativeInterim.length){
+    warn.className='notice warning';
+    warn.textContent='Alle Monatsendstände sind gedeckt. Dazwischen gibt es jedoch '+negativeInterim.length+' Buchung(en) mit negativem Zwischenstand. Bitte im Zahlungsplan prüfen, ob Lastschriften vor der nächsten Überweisung scheitern könnten.';
+  }else{
+    warn.className='notice';
+    warn.textContent='Keine negative Unterdeckung im Zahlungsplan oder zum Monatsende innerhalb der 12-Monats-Übersicht.';
+  }
+
+  const summary=$('monthStatus');
+  summary.className='notice'+(negativeMonths?' warning':'');
+  summary.textContent=negativeMonths?negativeMonths+' Monatsendstand/-stände sind negativ. Bitte Startguthaben oder Aufrundung prüfen.':'Alle zwölf Monatsendstände sind nichtnegativ. Zwischen einzelnen Buchungen kann dennoch eine Unterdeckung auftreten.';
+ // Zahlungsplan verwendet exakt dieselben Ereignisse und denselben Zeitraum wie die 12-Monats-Tabelle.
+  // Keine Änderung der Überweisungs-, Jahreskosten- oder Liquiditätsberechnung.
+  const balanceClass=n=>n<0?'negative':'positive';
+  let scheduleHtml='<div class="schedule-head"><div>Datum / Buchung</div><div>Betrag</div><div>Kontostand</div></div>';
+  let eventIndex=0, running=bal;
+  for(let i=0;i<12;i++){
+    const monthStart=new Date(base.getFullYear(),base.getMonth()+i,1);
+    const nextMonth=new Date(monthStart.getFullYear(),monthStart.getMonth()+1,1);
+    const monthEvents=monthlyForecast.events.filter(e=>e.date>=monthStart&&e.date<nextMonth);
+    for(const e of monthEvents){
+      running=Math.round((running+e.delta)*100)/100;
+      scheduleHtml+=`<div class="schedule-line"><div class="schedule-description"><b>${fmt(e.date)}</b><small>${e.kind==='transfer'?'Eigene Überweisung am '+data.transferDay+'.':e.kind==='extraTransfer'?'Geldeingang: '+esc(e.transferName):esc(e.cost.name)+' · '+esc(e.cost.category)}</small></div><div class="schedule-number">${e.delta>=0?'+':'−'}${money(Math.abs(e.delta))}</div><div class="schedule-number schedule-balance ${balanceClass(running)}">${money(running)}</div></div>`;
+      eventIndex++;
+    }
+    const lastDay=new Date(nextMonth.getFullYear(),nextMonth.getMonth(),0);
+    scheduleHtml+=`<div class="schedule-line month-close"><div class="schedule-description"><b>Monatsende ${months[monthStart.getMonth()]} ${monthStart.getFullYear()}</b><small>${fmt(lastDay)} · Übertrag in Folgemonat</small></div><div class="schedule-number">–</div><div class="schedule-number schedule-balance ${balanceClass(running)}">${money(running)}</div></div>`;
+  }
+  // Vortages-Endstand: ausschließlich gebuchte Planereignisse vor dem heutigen Tag.
+  // Ein Datum vor dem Starttag ist nicht rekonstruierbar; nach dem 12-Monats-Horizont ebenfalls nicht.
+  const yesterday=new Date(today.getFullYear(),today.getMonth(),today.getDate()-1);
+  const planEnd=new Date(base.getFullYear(),base.getMonth()+12,1);
+  if(yesterday<base||yesterday>=planEnd){
+    $('mYesterday').textContent='–';
+    $('yesterdayInfo').textContent=yesterday<base?'Vortag liegt vor dem Startdatum':'Vortag außerhalb der 12-Monats-Planung';
+  }else{
+    const yesterdayBalance=Math.round((bal+monthlyForecast.events.filter(e=>e.date<=yesterday).reduce((sum,e)=>sum+e.delta,0))*100)/100;
+    $('mYesterday').textContent=money(yesterdayBalance);
+    $('mYesterday').className=yesterdayBalance<0?'negative':'positive';
+    $('yesterdayInfo').textContent='Berechneter Stand von gestern ('+new Intl.DateTimeFormat('de-DE').format(yesterday)+') · keine Bankabfrage';
+  }
+  $('schedule').innerHTML=scheduleHtml;
+ renderCategories();renderCategorySelect();let filter=$('costFilter').value,items=data.costs.filter(c=>filter==='all'||filter==='ended'&&isEnded(c,today)||filter==='paused'&&c.active==='no'&&!isEnded(c,today)||filter==='active'&&c.active!=='no'&&!isEnded(c,today));$('costCount').textContent=data.costs.length+' Einträge';$('costList').innerHTML=items.map(c=>{let ended=isEnded(c,today),paused=c.active==='no'&&!ended;return `<div class="listitem"><div><b>${esc(c.name)} ${ended?'<span class="pill ended">Beendet</span>':paused?'<span class="pill paused">Pausiert</span>':''}</b><small>${esc(c.category)} · ${freqLabel(c)}</small><small>Erster Termin: ${fmt(parseDate(c.firstDate))}${c.endDate?' · Letzte Abbuchung bis '+fmt(parseDate(c.endDate)):''}</small></div><div class="amount">${money(c.amount)}<div class="row" style="margin-top:7px"><button class="secondary" onclick="editCost('${esc(c.id)}')">Ändern</button><button class="danger" onclick="deleteCost('${esc(c.id)}')">Löschen</button></div></div></div>`}).join('')||'<div class="empty">Keine passenden Einträge.</div>';
+}
+function renderCategorySummary(base,end,annual){
+  // Exakt derselbe Zeitraum und dieselben Abbuchungsereignisse wie die Jahreskennzahl.
+  const events=allEvents(base,end), groups=new Map();
+  for(const e of events){
+    const cat=e.cost.category||'Sonstiges';
+    if(!groups.has(cat))groups.set(cat,{total:0,items:new Map()});
+    const g=groups.get(cat),key=e.cost.id;
+    if(!g.items.has(key))g.items.set(key,{cost:e.cost,total:0,count:0});
+    const item=g.items.get(key);item.total+=Number(e.cost.amount);item.count++;g.total+=Number(e.cost.amount);
+  }
+  $('categoryTotal').textContent=money(annual);
+  $('categoryAverage').textContent=money(annual/12);
+  const sorted=[...groups.entries()].sort((a,b)=>b[1].total-a[1].total||a[0].localeCompare(b[0],'de'));
+  $('categorySummary').innerHTML=sorted.map(([cat,g])=>{
+    const items=[...g.items.values()].sort((a,b)=>b.total-a.total||a.cost.name.localeCompare(b.cost.name,'de'));
+    const detail=items.map(item=>`<div class="category-item"><div><b>${esc(item.cost.name)}</b><small>${esc(freqLabel(item.cost))} · ${item.count} ${item.count===1?'Abbuchung':'Abbuchungen'} im Zeitraum · je ${money(item.cost.amount)}</small></div><div class="category-amount">${money(item.total)}<small>in 12 Monaten</small></div></div>`).join('');
+    return `<div class="category-group"><div class="category-header"><b>${esc(cat)}</b><span class="category-total">${money(g.total)}</span></div><div class="category-detail">${detail}</div><div class="category-foot">${items.length} ${items.length===1?'Einzelposten':'Einzelposten'} · Monatsdurchschnitt ${money(g.total/12)}</div></div>`;
+  }).join('')||'<div class="empty">Im gewählten Zeitraum sind keine Abbuchungen geplant.</div>';
+  renderCategoryPie(sorted);
+}
+function renderCategoryPie(sorted){
+ const el=$('categoryPie'),total=sorted.reduce((sum,[,g])=>sum+g.total,0);
+ if(total<=0){el.innerHTML='<div class="empty">Keine Kosten für ein Diagramm vorhanden.</div>';return;}
+ const colors=['#1f6a50','#d69a42','#507db1','#a66a94','#73a5a0','#d07566','#8b83b6','#8c9b57','#c28b65','#667a8a'];
+ const cx=140,cy=140,r=113;let angle=-Math.PI/2;
+ const parts=sorted.map(([name,g],i)=>{
+  const fraction=g.total/total,delta=fraction*2*Math.PI,start=angle;angle+=delta;
+  const color=colors[i%colors.length],pct=fraction*100;
+  let shape='';
+  if(fraction>=.999999){shape=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}"/>`;}
+  else {const x1=cx+r*Math.cos(start),y1=cy+r*Math.sin(start),x2=cx+r*Math.cos(angle),y2=cy+r*Math.sin(angle);
+   shape=`<path d="M ${cx} ${cy} L ${x1.toFixed(3)} ${y1.toFixed(3)} A ${r} ${r} 0 ${delta>Math.PI?1:0} 1 ${x2.toFixed(3)} ${y2.toFixed(3)} Z" fill="${color}" stroke="white" stroke-width="1.5"/>`;}
+  const label=esc(name)+' – '+pct.toLocaleString('de-DE',{maximumFractionDigits:1})+' %';
+  return {shape:`<g><title>${label}</title>${shape}</g>`,name,color,pct};
+ });
+ el.innerHTML=`<svg viewBox="0 0 280 280" role="img" aria-label="Tortendiagramm der Fixkosten nach Kategorien">${parts.map(p=>p.shape).join('')}</svg><ul class="category-legend">${parts.map(p=>`<li><span class="swatch" style="background:${p.color}"></span><span class="legend-name">${esc(p.name)}</span><strong>${p.pct.toLocaleString('de-DE',{maximumFractionDigits:1})} %</strong></li>`).join('')}</ul>`;
+}
+function freqLabel(c){return c.frequency==='monthly'?'monatlich':c.frequency==='quarterly'?'vierteljährlich':c.frequency==='yearly'?'jährlich':'Monate: '+(c.months||[]).map(m=>months[m-1]).join(', ')}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function frequencyChanged(){let f=$('frequency').value;$('monthField').classList.toggle('hidden',f!=='yearly');$('monthsField').classList.toggle('hidden',f!=='months')}
+function toggleLastDay(){$('day').disabled=$('lastDay').checked}
+function saveCost(){let name=$('name').value.trim(),amount=Number($('amount').value),firstDate=$('firstDate').value,endDate=$('endDate').value;if(!name||!Number.isFinite(amount)||amount<=0||isNaN(parseDate(firstDate))){alert('Bitte Bezeichnung, gültigen Betrag und ersten Abbuchungstermin eintragen.');return}if(endDate&&(isNaN(parseDate(endDate))||endDate<firstDate)){alert('Das Enddatum darf nicht vor der ersten Abbuchung liegen.');return}let day=Number($('day').value);if(!Number.isInteger(day)||day<1||day>31){alert('Bitte einen Abbuchungstag zwischen 1 und 31 eingeben.');return}let c={id:$('editId').value||String(Date.now())+'-'+Math.random().toString(36).slice(2,7),name,amount,category:$('category').value,frequency:$('frequency').value,day,firstDate,endDate,lastDay:$('lastDay').checked,active:$('active').value,months:[...document.querySelectorAll('#monthChecks input:checked')].map(x=>Number(x.value))};if(c.frequency==='months'&&!c.months.length){alert('Bitte mindestens einen Fälligkeitsmonat auswählen.');return}let i=data.costs.findIndex(x=>x.id===c.id);if(i>=0)data.costs[i]=c;else data.costs.push(c);resetForm();persist()}
+function resetForm(){$('editId').value='';$('formTitle').textContent='Neue Fixkosten hinzufügen';['name','amount','endDate'].forEach(id=>$(id).value='');$('category').value='Wohnen';$('frequency').value='monthly';$('day').value=1;$('lastDay').checked=false;toggleLastDay();$('month').value=1;$('firstDate').value=dateStr(new Date());$('active').value='yes';document.querySelectorAll('#monthChecks input').forEach(x=>x.checked=false);frequencyChanged()}
+function editCost(id){let c=data.costs.find(x=>x.id===id);if(!c)return;document.querySelector('[data-tab="costs"]').click();$('editId').value=c.id;$('formTitle').textContent='Fixkosten bearbeiten';$('name').value=c.name;$('amount').value=c.amount;$('category').value=c.category;$('frequency').value=c.frequency;$('day').value=c.day;$('firstDate').value=c.firstDate;$('endDate').value=c.endDate||'';$('lastDay').checked=!!c.lastDay;toggleLastDay();$('active').value=c.active;$('month').value=c.month||1;document.querySelectorAll('#monthChecks input').forEach(x=>x.checked=(c.months||[]).includes(Number(x.value)));frequencyChanged();window.scrollTo({top:0,behavior:'smooth'})}
+function deleteCost(id){let c=data.costs.find(x=>x.id===id);if(c&&confirm('„'+c.name+'“ endgültig löschen? Dadurch können auch frühere Auswertungen verändert werden.')){data.costs=data.costs.filter(x=>x.id!==id);persist()}}
+function renderCategorySelect(){let el=$('category'),v=el.value;el.innerHTML=data.categories.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');if(data.categories.includes(v))el.value=v}
+function renderCategories(){$('categoryList').innerHTML=data.categories.map((c,i)=>`<div class="categoryline"><span>${esc(c)}</span><button class="secondary" onclick="renameCategory(${i})">Umbenennen</button><button class="danger" onclick="removeCategory(${i})">Löschen</button></div>`).join('')}
+function addCategory(){let n=$('newCategory').value.trim();if(!n){alert('Bitte einen Kategorienamen eingeben.');return}if(data.categories.some(x=>x.toLowerCase()===n.toLowerCase())){alert('Diese Kategorie gibt es bereits.');return}data.categories.push(n);$('newCategory').value='';persist();$('category').value=n}
+function renameCategory(i){let old=data.categories[i],n=prompt('Neuer Name für „'+old+'“:',old);if(n===null)return;n=n.trim();if(!n||data.categories.some((x,j)=>j!==i&&x.toLowerCase()===n.toLowerCase())){alert('Bitte einen eindeutigen Namen eingeben.');return}data.categories[i]=n;data.costs.forEach(c=>{if(c.category===old)c.category=n});persist()}
+function removeCategory(i){let old=data.categories[i],used=data.costs.filter(c=>c.category===old).length;if(data.categories.length===1){alert('Mindestens eine Kategorie muss erhalten bleiben.');return}if(used){let alternatives=data.categories.filter(c=>c!==old),replacement=prompt('„'+old+'“ wird von '+used+' Einträgen verwendet. Bitte Ersatzkategorie exakt eingeben:\n'+alternatives.join(' · '),alternatives[0]);if(replacement===null)return;replacement=replacement.trim();if(!alternatives.includes(replacement)){alert('Bitte eine vorhandene Ersatzkategorie eingeben.');return}if(!confirm(used+' Einträge nach „'+replacement+'“ verschieben und Kategorie „'+old+'“ löschen?'))return;data.costs.forEach(c=>{if(c.category===old)c.category=replacement})}else if(!confirm('Kategorie „'+old+'“ löschen?'))return;data.categories.splice(i,1);persist()}
+function renderExtraTransfers(){const host=$('extraTransfers');host.innerHTML=data.extraTransfers.map((t,i)=>`<div class="extra-transfer-entry" data-extra-index="${i}" style="border-bottom:1px solid var(--line);padding:10px 0"><div class="row"><div><label>Bezeichnung / Absender</label><input class="extra-name" value="${esc(t.name)}" placeholder="z. B. Haushaltsbeitrag"></div><div><label>Betrag (€)</label><input class="extra-amount" type="number" min="0.01" step="0.01" value="${t.amount||''}"></div></div><div><label>Monatlicher Eingangstag (1–31)</label><input class="extra-day" type="number" min="1" max="31" step="1" value="${t.day}"></div><div class="remove-extra-row"><button class="danger" onclick="removeExtraTransfer(${i})">Eintrag entfernen</button></div></div>`).join('')||'<p class="muted">Noch keine weiteren Überweisungen erfasst.</p>';$('addExtraTransferBtn').disabled=data.extraTransfers.length>=3;}
+function readExtraTransfers(){const entries=[...document.querySelectorAll('.extra-transfer-entry')];const result=[];for(const el of entries){const name=el.querySelector('.extra-name').value.trim(),amount=Number(el.querySelector('.extra-amount').value),day=Number(el.querySelector('.extra-day').value);if(!name||!Number.isFinite(amount)||amount<=0||!Number.isInteger(day)||day<1||day>31){alert('Bitte bei jeder zusätzlichen Überweisung Bezeichnung, positiven Betrag und einen Tag von 1 bis 31 eingeben.');return null}result.push({id:data.extraTransfers[result.length]?.id||String(Date.now()+result.length),name,amount,day})}return result;}
+function addExtraTransfer(){if(data.extraTransfers.length>=3)return;const values=readExtraTransfers();if(values===null)return;data.extraTransfers=values;data.extraTransfers.push({id:String(Date.now()),name:'',amount:0,day:1});renderExtraTransfers();}
+function removeExtraTransfer(i){const label=document.querySelectorAll('.extra-transfer-entry')[i]?.querySelector('.extra-name')?.value.trim()||'diese Überweisung';if(!confirm('Soll „'+label+'“ wirklich entfernt werden?'))return;const rows=[...document.querySelectorAll('.extra-transfer-entry')];const result=[];for(let j=0;j<rows.length;j++){if(i===j)continue;const el=rows[j];result.push({id:data.extraTransfers[j]?.id||String(j),name:el.querySelector('.extra-name').value.trim(),amount:Number(el.querySelector('.extra-amount').value)||0,day:Number(el.querySelector('.extra-day').value)||1})}data.extraTransfers=result;renderExtraTransfers();}
+function saveExtraTransfers(){const result=readExtraTransfers();if(result===null)return;data.extraTransfers=result;persist();alert('Zusätzliche Überweisungen gespeichert.');}
+function saveSettings(){let bal=Number($('balance').value),step=Number($('roundingStep').value),day=Number($('transferDay').value),asof=$('asof').value;if(!Number.isFinite(bal)||![5,10,25,50].includes(step)||!Number.isInteger(day)||day<1||day>31||isNaN(parseDate(asof))){alert('Bitte gültiges Startguthaben, Startdatum, einen Überweisungstag zwischen 1 und 31 sowie eine Aufrundung auswählen.');return}data.balance=bal;data.asof=asof;data.transferDay=day;data.roundingStep=step;persist();alert('Einstellungen gespeichert.')}
+function download(name,blob){let a=document.createElement('a'),url=URL.createObjectURL(blob);a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000)}
+function exportData(){download('fixkostenmanager-sicherung-'+dateStr(new Date())+'.json',new Blob([JSON.stringify(data,null,2)],{type:'application/json'}))}
+function importData(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let d=JSON.parse(r.result);if(!d||!Array.isArray(d.costs))throw Error('Keine Fixkostenliste gefunden');if(!confirm('Die importierte Sicherung ersetzt alle vorhandenen Fixkosten und Einstellungen. Fortfahren?'))return;data=d;normalize();persist();resetForm();alert('Sicherung importiert: '+data.costs.length+' Fixkosten.')}catch(err){alert('Import fehlgeschlagen: '+err.message)}finally{e.target.value=''}};r.readAsText(f)}
+const csvCols=['ID','Bezeichnung','Betrag_EUR','Kategorie','Rhythmus','Abbuchungstag','Erster_Termin','Aktiv','Monate','Enddatum','Monatsletzter'];
+function csvQuote(x){return '"'+String(x??'').replace(/"/g,'""')+'"'}
+function exportCSV(){let rows=[csvCols,...data.costs.map(c=>[c.id,c.name,c.amount,c.category,c.frequency,c.day,c.firstDate,c.active,(c.months||[]).join('|'),c.endDate||'',c.lastDay?'ja':'nein'])];download('fixkosten_numbers.csv',new Blob(['\ufeff'+rows.map(r=>r.map(csvQuote).join(';')).join('\r\n')],{type:'text/csv;charset=utf-8'}))}
+function parseCSV(s){s=s.replace(/^\ufeff/,'');let rows=[],row=[],field='',q=false;for(let i=0;i<s.length;i++){let c=s[i];if(c==='"'){if(q&&s[i+1]==='"'){field+='"';i++}else q=!q}else if(c===';'&&!q){row.push(field);field=''}else if((c==='\n'||c==='\r')&&!q){if(c==='\r'&&s[i+1]==='\n')i++;row.push(field);if(row.some(x=>x!==''))rows.push(row);row=[];field=''}else field+=c}row.push(field);if(row.some(x=>x!==''))rows.push(row);return rows}
+function importCSV(ev){let f=ev.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let rows=parseCSV(r.result),oldCols=csvCols.slice(0,9),cols=rows[0],legacy=JSON.stringify(cols)===JSON.stringify(oldCols);if(!legacy&&JSON.stringify(cols)!==JSON.stringify(csvCols))throw Error('Spaltenüberschriften stimmen nicht mit dem App-Format überein.');let costs=rows.slice(1).map((v,i)=>{if(v.length!==(legacy?9:11))throw Error('Falsche Spaltenanzahl in Zeile '+(i+2));let amount=Number(v[2].replace(',','.')),day=Number(v[5]),ms=v[8]?v[8].split('|').map(Number):[],endDate=legacy?'':v[9],lastDay=legacy?false:v[10]==='ja';if(!v[1]||!Number.isFinite(amount)||amount<=0||!Number.isInteger(day)||day<1||day>31||isNaN(parseDate(v[6]))||endDate&&(isNaN(parseDate(endDate))||endDate<v[6])||!['monthly','quarterly','yearly','months'].includes(v[4])||!['yes','no'].includes(v[7])||ms.some(m=>m<1||m>12))throw Error('Ungültiger Eintrag in Zeile '+(i+2));return {id:v[0]||String(i+1),name:v[1],amount,category:v[3],frequency:v[4],day,firstDate:v[6],active:v[7],months:ms,endDate,lastDay}});if(!confirm('Die '+costs.length+' importierten Einträge ersetzen deine bisherige Fixkostenliste. Fortfahren?'))return;data.costs=costs;normalize();persist();alert('Fixkosten importiert.')}catch(e){alert('Import fehlgeschlagen: '+e.message)}finally{ev.target.value=''}};r.readAsText(f,'utf-8')}
+function clearAll(){if(confirm('Wirklich alle Fixkosten und Einstellungen endgültig löschen? Vorher JSON-Sicherung erstellen!')){data={costs:[],balance:0,asof:dateStr(new Date()),transferDay:9,buffer:100,roundingStep:25,extraTransfers:[],categories:[...defaults]};persist();resetForm()}}
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));['home','costs','calendar','categories','settings'].forEach(id=>$(id).classList.toggle('hidden',id!==b.dataset.tab))}));
+months.forEach((m,i)=>$('monthChecks').insertAdjacentHTML('beforeend',`<label class="month"><input type="checkbox" value="${i+1}">${m}</label>`));
+$('asof').value=data.asof||dateStr(new Date());$('firstDate').value=dateStr(new Date());frequencyChanged();render();
+</script></body></html>
